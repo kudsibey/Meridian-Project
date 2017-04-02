@@ -1,0 +1,65 @@
+﻿@{
+  var db = Database.Open("MeridianComputers");
+  var ProductId = (Request.QueryString["ID"]);
+  if (ProductId.IsEmpty()) {
+    Response.Redirect("~/Members/Product/Products");
+  }
+  var prod = db.QuerySingle("SELECT *, FORMAT(Product.Price,'C','en-gb') as sterlingPrice FROM Product WHERE ID = @0", ProductId);
+  if( IsPost && !ProductId.IsEmpty()) {
+    var deleteQueryString = "DELETE FROM Product WHERE Id=@0";
+    db.Execute(deleteQueryString, ProductId);
+    Response.Redirect("~/Members/Product/Products");
+  }
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="~/content/bootstrap.css" rel="stylesheet" media="screen" type="text/css">
+  <link href="~/content/myStyles.css" rel="stylesheet" media="screen" type="text/css">
+  <link href="~/content/StyleSheet.css" rel="stylesheet" media="screen" type="text/css">
+  <style>
+       .validation-summary-errors{border:2px dashed red;color:red;font-weight:bold; margin:12px; }
+      p.itemdesc { color:#f00; display: inline; font-size: 25px; } 
+      pre.itemdesc { color:#000; display: inline; font-size: 15px;} 
+      pre.itemdesc1 { color:#0026ff; display: inline; font-size: 12px; padding: 5px; height: fit-content;background-color: #e2cbcb} 
+      p.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #168800;}
+      select.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #808080; font-size: 15px}
+      pre.itemvalue{ color: #000;display: inline;font-size:15px; background-color: #BFF3F5;}       
+      input.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed} 
+      textarea.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed;width: 300px;height: 100px}      
+  </style>
+
+<title>Delete Product</title>
+</head>
+
+<body>
+  <div class="row">
+      <br/>
+  </div>
+  <div class="row">
+      <div class="col-md-1"> </div>
+      <div class="col-md-2">
+      </div>
+      <div class="col-md-9">
+        <form method="post" action="" name="form">
+           <h2>Product Delete Confirmation</h2>
+           <p class="itemdesc">Are you sure you want to <u>delete</u> the following product?</p><br/></br>
+           <pre class="itemdesc">Product ID:</pre> <pre class="itemvalue">@prod.id</pre><br/> <br/> 
+           <pre class="itemdesc">Name:</pre> <pre class="itemvalue">@prod.Name</pre><br/> <br/>
+           <pre class="itemdesc">Description:</pre> <pre class="itemvalue">@prod.Description</pre><br/> <br/>
+           <pre class="itemdesc">Price:</pre> <pre class="itemvalue">@prod.sterlingPrice</pre><br/> <br/>
+           <pre class="itemdesc">Quantity:</pre> <pre class="itemvalue">@prod.Quantity</pre><br/> <br/> 
+           <pre class="itemdesc">Supplier ID:</pre> <pre class="itemvalue">@prod.SupplierId</pre><br/> <br/> <br/>
+           <p><button type="submit" class="btn btn-danger btn-sm" name="buttonSubmit">Delete</button></p><br/>
+        </form>
+      </div>
+  </div>
+ <div class="row">                 
+      <div class="col-md-3"> </div>
+      <div class="col-md-9">
+           <a href="~/Members/Product/Products" class="LnkBtnMyStyle">Products List</a> <a href="~/Members/MainPage" class="LnkBtnMyStyle">Main Page</a> 
+      </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,110 @@
+﻿@{
+    /*Validation.RequireField("employeeName", "Employee name is required.");
+    Validation.RequireField("niNumber", "NI number is required.");
+    Validation.RequireField("dob", "Employee's DOB is required.");
+    Validation.RequireField("startDate", "Start day is required.");
+    Validation.Add("startDate", Validator.DateTime("Start date must be a date"));
+    Validation.RequireField("addressline1", "1st line of address  is required.");
+    Validation.RequireField("town", "Town name is required.");
+    Validation.RequireField("city", "City name is required.");
+    Validation.RequireField("postCode", "Post code is required.");
+    Validation.RequireField("telephone", "Employee's telehone number is required.");
+    Validation.RequireField("mobile", "Employee's mobile number is required.");
+    Validation.RequireField("email", "Employee's email address is required..");
+    Validation.RequireField("hourlyRate", "Employee's hourly rate is required.");*/
+        
+
+    if (IsPost ) {
+      if(Validation.IsValid()){
+            var db = Database.Open("MeridianComputers");
+            string employeeName = Request.Form["employeeName"];
+            string niNumber = Request.Form["niNumber"];
+            DateTime dobirth = Convert.ToDateTime(Request.Form["dob"]);
+            DateTime startDate = Convert.ToDateTime(Request.Form["startDate"]);
+             <!-  end date is not processed here ->
+            string addressLine1 = Request.Form["addressLine1"];
+            string town = Request.Form["town"];
+            string city = Request.Form["city"];    
+            string postCode = Request.Form["postCode"];    
+            string telephone = Request.Form["telephone"];    
+            string mobile = Request.Form["mobile"];
+            string email = Request.Form["email"];
+            decimal hourlyRate = Convert.ToDecimal(Request.Form["hourlyRate"]);
+            if(ModelState.IsValid) {
+                var insertQuery = "INSERT INTO Employee (EmployeeName,NiNumber,Dob,StartDate,AddressLine1,Town,City,PostCode,Telephone,Mobile,Email,HourlyRate) " +
+                    "VALUES (@0, @1, @2,@3,@4,@5,@6,@7,@8,@9, @10, @11)";
+                db.Execute(insertQuery, employeeName,niNumber,dobirth,startDate,addressLine1, town,city,postCode,telephone,mobile,email,hourlyRate);
+                // Display the page that lists products.
+                Response.Redirect("~/Members/Employee/Employees");
+            }
+        } 
+      }
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+ <title>Add Employee</title>
+ <link href="~/content/bootstrap.css" rel="stylesheet" media="screen" type="text/css">
+ <link href="~/content/myStyles.css" rel="stylesheet" media="screen" type="text/css">
+ <link href="~/content/StyleSheet.css" rel="stylesheet" media="screen" type="text/css">
+<style>
+      .validation-summary-errors{border:2px none red;color:red;font-weight:bold; margin:12px; background-color: #b6ff00}
+      .input-validation-valid{display: none;}
+      p.itemdesc { color:#f00; display: inline; font-size: 25px; } 
+      pre.itemdesc { color:#000; display: inline; font-size: 15px;} 
+      pre.itemdesc1 { color:#0026ff; display: inline; font-size: 12px; padding: 5px; height: fit-content;background-color: #e2cbcb} 
+      p.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #168800;}
+      select.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #808080; font-size: 15px}
+      pre.itemvalue{ color: #000;display: inline;font-size:15px; background-color: #BFF3F5;}       
+      input.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed} 
+      textarea.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed;width: 300px;height: 100px}      
+ </style> 
+</head>
+<body>
+ 
+@Html.ValidationSummary("")
+   
+  
+<form method="post" action="">
+     <div class="row>">
+       <div class="col-md-2"></div>
+       <div class="col-md-10">
+           <h1>New Employee</h1><br/>
+               <pre class="itemdesc">Name:</pre>
+               <input required class="myInputboxStyle" name="EmployeeName" type="text" size="25"  value="@Request.Form["employeeName"]" /> </br></br>
+               <pre class="itemdesc">NI Number:</pre>
+               <input required class="myInputboxStyle" name="NiNumber" type="text" size="10" value="@Request.Form["niNumber"]" /></br></br>
+               <pre class="itemdesc">Date of Birth:</pre>
+               <input required class="myInputboxStyle" name="Dob" type="date" size="4" value="@Request.Form["Dob"]" /></br></br>
+               <pre class="itemdesc">Start Date:</pre>
+               <input required class="myInputboxStyle" name="StartDate" type="date" id="datePicker"size="4" value="@Request.Form["startDate"]" /></br></br> 
+               <pre class="itemdesc">Address:</pre>
+               <input required class="myInputboxStyle" name="AddressLine1" type="text" size="25" value="@Request.Form["addressLine1"]" /></br></br>
+               <pre class="itemdesc">Town:</pre>
+               <input class="myInputboxStyle" name="Town" type="text" size="20" value="@Request.Form["town"]" /></br></br>
+               <pre class="itemdesc">City:</pre>
+               <input class="myInputboxStyle" name="City" type="text" size="15" value="@Request.Form["city"]" /></br></br>
+               <pre class="itemdesc">Post Code:</pre>
+               <input required class="myInputboxStyle" name="PostCode" type="text" size="5" value="@Request.Form["postCode"]" /></br></br>
+               <pre class="itemdesc">Telephone:</pre>
+               <input class="myInputboxStyle" name="Telephone" type="text" size="10" value="@Request.Form["telephone"]" /></br></br>
+               <pre class="itemdesc">Mobile:</pre>
+               <input required class="myInputboxStyle" name="Mobile" type="text" size="10" value="@Request.Form["mobile"]" /></br></br>
+               <pre class="itemdesc">EMail:</pre>
+               <input required class="myInputboxStyle" name="Email" type="text" size="25" value="@Request.Form["email"]" /></br></br>
+               <pre class="itemdesc">Hourly Rate:</pre>
+               <input required class="myInputboxStyle" name="HourlyRate" type="text" pattern="[0-9]+([\.,][0-9]+)?" size="3" value="@Request.Form["hourlyRate"]" /></br><br/>
+
+               <button type="submit" class="btn btn-success btn-sm" name="buttonSubmit">Save</button><br/><br/>
+        </div>  
+    </div>
+    <div class="row">                 
+          <div class="col-md-2"> </div>
+          <div class="col-md-10">
+               <a href="~/Members/Product/Employeess" class="LnkBtnMyStyle">Products List</a> <a href="~/Members/MainPage" class="LnkBtnMyStyle">Main Page</a> 
+          </div>
+     </div>
+</form>
+</body>
+</html>

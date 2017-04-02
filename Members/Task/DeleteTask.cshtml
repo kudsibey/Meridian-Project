@@ -1,0 +1,70 @@
+﻿
+@{
+  var db = Database.Open("MeridianComputers");
+  var TaskId = (Request.QueryString["ID"]);
+  if (TaskId.IsEmpty()) {
+    Response.Redirect("~/Members/Task/Tasks");
+  }
+  var task = db.QuerySingle("SELECT *, FORMAT(task.DateEntered,'dd-MM-yyyy') AS EntryDate,FORMAT(task.CompletionDate,'dd-MM-yyyy') AS DateCompleted FROM Task WHERE id = @0", TaskId);
+  if( IsPost && !TaskId.IsEmpty()) {
+    var deleteQueryString = "DELETE FROM Task WHERE Id=@0";
+    db.Execute(deleteQueryString, TaskId);
+    Response.Redirect("~/Members/Task/Tasks");
+  }
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="~/content/bootstrap.css" rel="stylesheet" media="screen" type="text/css">
+  <script src="~/content/jquery-1.9.1.js"></script>
+  <link href="~/content/myStyles.css" rel="stylesheet" media="screen" type="text/css">
+  <link href="~/content/StyleSheet.css" rel="stylesheet" media="screen" type="text/css">
+  <style>
+          p.itemdesc { color:#f00; display: inline; font-size: 25px; } 
+         pre.itemdesc { color:#f00; display: inline; font-size: 15px;} 
+         p.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #808080;}
+         pre.itemvalue{ color: #000;display: inline;font-size:15px; background-color: #BFF3F5;}       
+         input.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed}
+  </style>
+
+<title>Delete A Task</title>
+</head>
+
+<body>
+  <div class="row">
+      <br/>
+  </div>
+  <div class="row">
+      <div class="col-md-1"> </div>
+      <div class="col-md-2">
+      </div>
+      <div class="col-md-9">
+        <form method="post" action="" name="form">
+              <h2>Task Delete Confirmation</h2>
+              <p class="itemdesc">Are you sure you want to <u>delete</u> the following Task?</p><br/></br>
+              <pre class="itemdesc">Task ID:</pre> <pre class="itemvalue"> @task.Id</pre><br/><br/>
+              <pre class="itemdesc">Customer ID:</pre><pre class="itemvalue"> @task.CustomerId</pre><br/><br/>
+              <pre class="itemdesc">Technician ID:</pre><pre class="itemvalue"> @task.TechnicianId</pre><br/><br/>
+              <pre class="itemdesc">Date Entered:</pre><pre class="itemvalue"> @task.EntryDate</pre><br/><br/>
+              <pre class="itemdesc">Short Description:</pre><pre class="itemvalue"> @task.ShortDesc</pre><br/><br/>
+              <pre class="itemdesc">Quote given?:</pre><pre class="itemvalue"> @task.Quoted</pre><br/><br/>
+              <pre class="itemdesc">Quote accepted?:</pre><pre class="itemvalue"> @task.QuoteAccepted</pre><br/><br/>
+              <pre class="itemdesc">Task Completed?:</pre><pre class="itemvalue"> @task.Completed</pre><br/><br/>
+              <pre class="itemdesc">Completion Date:</pre><pre class="itemvalue"> @task.DateCompleted</pre><br/><br/>
+              <pre class="itemdesc">Invoice ID:</pre><pre class="itemvalue"> @task.InvoiceId</pre><br/><br/>
+              <pre class="itemdesc">Details:</pre></br>
+              <textarea class="itemvalue" style="width:500px;height:150px;resize: none;"> @task.Description</textarea> <br/><br/>
+              <p><button type="submit" class="btn btn-danger btn-sm" name="buttonSubmit">Delete</button></p><br/>
+         
+        </form>
+     </div>
+  </div>
+<div class="row">                 
+   <div class="col-md-3"> </div>
+   <div class="col-md-9">
+       <a href="~/Members/Task/Tasks" class="LnkBtnMyStyle">Tasks List</a><a href="~/Members/MainPage" class="LnkBtnMyStyle">Main Page</a> 
+   </div>
+</div>
+</body>
+</html>

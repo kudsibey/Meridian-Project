@@ -1,0 +1,152 @@
+﻿ 
+@{
+    var id=0;
+    var employeeName = "";
+    var niNumber = "";
+    string dob="";
+    string startDate="";
+    <!-  end date is not processed here ->
+    var addressLine1 = "";
+    var town = "";
+    var city = "";    
+    var postCode = "";    
+    var telephone = "";    
+    var mobile = "";
+    var email = "";
+    string hourlyRate ="";
+
+    /*Validation.RequireField("employeeName", "Employee name is required.");
+    Validation.RequireField("niNumber", "NI number is required.");
+    Validation.RequireField("dob", "Employee's DOB is required.");
+    Validation.RequireField("startDate", "Start day is required.");
+    Validation.Add("startDate", Validator.DateTime("Start date must be a date"));
+    Validation.RequireField("addressline1", "1st line of address  is required.");
+    Validation.RequireField("town", "Town name is required.");
+    Validation.RequireField("city", "City name is required.");
+    Validation.RequireField("postCode", "Post code is required.");
+    Validation.RequireField("telephone", "Employee's telehone number is required.");
+    Validation.RequireField("mobile", "Employee's mobile number is required.");
+    Validation.RequireField("email", "Employee's email address is required..");
+    Validation.RequireField("hourlyRate", "Employee's hourly rate is required."); */
+
+if(!IsPost){
+        if(!Request.QueryString["ID"].IsEmpty()){
+            id = Convert.ToInt16(Request.QueryString["ID"]);
+            var db = Database.Open("MeridianComputers");
+            var  dbCommand = "SELECT *,FORMAT ( Employee.Dob, 'd', 'en-gb' ) as empDob,FORMAT ( Employee.EndDate, 'd', 'en-gb' ) as empEnd,";
+            dbCommand = dbCommand + " FORMAT ( Employee.StartDate, 'd', 'en-gb' ) as empSDate , FORMAT ( Employee.HourlyRate, 'C', 'en-gb'  ) AS hrRate FROM Employee WHERE id = @0";
+            var row = db.QuerySingle(dbCommand, id);
+            employeeName = row.EmployeeName;
+            niNumber = row.NiNumber;
+            dob =row.empDob;
+            dob=String.Join("-", dob.Split('/').Reverse());
+            startDate=row.empSDate;
+            startDate=String.Join("-", startDate.Split('/').Reverse());
+            <!-  end date is not processed here ->
+            addressLine1=row.AddressLine1;
+            town= row.Town;
+            city=row.City;
+            postCode=row.PostCode;
+            telephone = row.Telephone;
+            mobile = row.Mobile;
+            email = row.Email;
+            hourlyRate = row.hrRate;
+        }
+        else{
+            Validation.AddFormError("No customer was selected.");
+        }
+    }
+
+     if(IsPost){
+             
+            id = Convert.ToInt16(Request.Form["empId"]);
+            employeeName = Request.Form["EmployeeName"];
+            niNumber = Request.Form["NiNumber"];
+            dob = Request.Form["Dob"];
+            startDate = Request.Form["StartDate"];
+            <!-  end date is not processed here ->
+            addressLine1 = Request.Form["AddressLine1"];
+            town = Request.Form["Town"];
+            city = Request.Form["City"];    
+            postCode = Request.Form["PostCode"];    
+            telephone = Request.Form["Telephone"];    
+            mobile = Request.Form["Mobile"];
+            email = Request.Form["Email"];
+            hourlyRate = Request.Form["HourlyRate"];
+
+        if(Validation.IsValid()){
+
+           var db = Database.Open("MeridianComputers");
+           var updateCommand = "UPDATE Employee SET EmployeeName=@0,NiNumber=@1,Dob=@2,StartDate=@3,AddressLine1=@4,Town=@5,City=@6,PostCode=@7,Telephone=@8,Mobile=@9,Email=@10,HourlyRate=@11 WHERE id=@12";
+           db.Execute(updateCommand, employeeName,niNumber,dob,startDate,addressLine1,town,city,postCode,telephone,mobile,email,hourlyRate,id);
+                Response.Redirect("~/Members/Employee/Employees");
+       }
+    }
+}
+
+<!DOCTYPE html>
+<html>
+  <head>
+   <meta charset="utf-8" />
+   <title>Edit Employee Data</title>
+  <link href="~/content/bootstrap.css" rel="stylesheet" media="screen" type="text/css">
+  <link href="~/content/myStyles.css" rel="stylesheet" media="screen" type="text/css">
+  <link href="~/content/StyleSheet.css" rel="stylesheet" media="screen" type="text/css">
+
+    <style>
+      .validation-summary-errors{border:none;color:red;font-weight:bold; margin:12px; }
+      p.itemdesc { color:#f00; display: inline; font-size: 25px; } 
+      pre.itemdesc { color:#f00; display: inline; font-size: 15px;} 
+      p.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #808080;}
+      pre.itemvalue{ color: #000;display: inline;font-size:15px; background-color: #BFF3F5;}       
+      input.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed}        
+    </style>
+  </head>
+</head>
+<body>
+@Html.ValidationSummary()
+<form method="post" action="">
+     <div class="row>">
+       <div class="col-md-2"></div>
+       <div class="col-md-10">
+           <h1>Update Employee Data</h1>
+               <pre class="itemdesc">Name:</pre>
+               <input required class="myInputboxStyle" name="EmployeeName" type="text" size="25"  value="@employeeName" /> </br></br>
+               <pre class="itemdesc">NI Number:</pre>
+               <input required class="myInputboxStyle" name="NiNumber" type="text" size="10" value="@niNumber" /></br></br>
+               <pre class="itemdesc">Date of Birth:</pre>
+               <input required class="myInputboxStyle" name="Dob" type="date" size="5" value=@dob /></br></br>
+               <pre class="itemdesc">Start Date:</pre>
+               <input required class="myInputboxStyle" name="StartDate" type="date" id="datePicker"size="5" value="@startDate" /></br></br> 
+               <pre class="itemdesc">Address:</pre>
+               <input required class="myInputboxStyle" name="AddressLine1" type="text" size="25" value="@addressLine1" /></br></br>
+               <pre class="itemdesc">Town:</pre>
+               <input class="myInputboxStyle" name="Town" type="text" size="20"  value="@town"  /></br></br>
+               <pre class="itemdesc">City:</pre>
+               <input class="myInputboxStyle" name="City" type="text" size="15" value="@city" /></br></br>
+               <pre class="itemdesc">Post Code:</pre>
+               <input required class="myInputboxStyle" name="PostCode" type="text" size="5" value="@postCode" /></br></br>
+               <pre class="itemdesc">Telephone:</pre>
+               <input class="myInputboxStyle" name="Telephone" type="text" size="10"  value="@telephone" /></br></br>
+               <pre class="itemdesc">Mobile:</pre>
+               <input required class="myInputboxStyle" name="Mobile" type="text" size="10" value="@mobile" /></br></br>
+               <pre class="itemdesc">EMail:</pre>
+               <input required class="myInputboxStyle" name="Email" type="text" size="25"   value="@email" /></br></br>
+               <pre class="itemdesc">Hourly Rate:</pre>
+               <input required class="myInputboxStyle" name="HourlyRate" type="text" pattern="£[0-9]+([\.,][0-9]+)?" size="3" value="@hourlyRate"
+                      oninvalid="this.setCustomValidity('Enter as currency included £ sign')"
+                      oninput="setCustomValidity('')"/></br><br/>
+               <input hidden type="number" name="empId" value="@id">
+              
+            <button type="submit" class="btn btn-success btn-sm" name="buttonSubmit">Update</button><br/><br/>
+        </div>  
+     </div>
+<div class="row">                 
+      <div class="col-md-2"> </div>
+      <div class="col-md-10">
+           <a href="~/Members/Employee/Employees" class="LnkBtnMyStyle">Employees List</a> <a href="~/Members/MainPage" class="LnkBtnMyStyle">Main Page</a> 
+      </div>
+</div>
+</form>
+</body>
+</html>

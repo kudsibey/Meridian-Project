@@ -1,0 +1,69 @@
+﻿@{
+  var db = Database.Open("MeridianComputers");
+  var EmployeeId = (Request.QueryString["ID"]);
+  if (EmployeeId.IsEmpty()) {
+    Response.Redirect("~/Employee/Employees");
+  }
+  var empl = db.QuerySingle("SELECT * FROM Employee WHERE ID = @0", EmployeeId);
+  if( IsPost && !EmployeeId.IsEmpty()) {
+    var deleteQueryString = "DELETE FROM Employee WHERE Id=@0";
+    db.Execute(deleteQueryString, EmployeeId);
+    Response.Redirect("~/Members/Employee/Employees");
+  }
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="~/content/bootstrap.css" rel="stylesheet" media="screen" type="text/css">
+  <link href="~/content/myStyles.css" rel="stylesheet" media="screen" type="text/css">
+  <link href="~/content/StyleSheet.css" rel="stylesheet" media="screen" type="text/css">
+  <style>
+         p.itemdesc { color:#f00; display: inline; font-size: 25px; } 
+         pre.itemdesc { color:#f00; display: inline; font-size: 15px;} 
+         p.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #808080;}
+         pre.itemvalue{ color: #000;display: inline;font-size:15px; background-color: #BFF3F5;}       
+         input.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed}
+  </style>
+
+<title>Delete Employee</title>
+</head>
+
+<body>
+  <div class="row">
+      <br/>
+  </div>
+  <div class="row">
+      <div class="col-md-1"> </div>
+      <div class="col-md-2">
+      </div>
+      <div class="col-md-9">
+        <form method="post" action="" name="form">
+           <h2>Employee Delete Confirmation</h2>
+           <p class="itemdesc">Are you sure you want to <u>delete</u> the employee detailed below?</p><br/></br>
+           <pre class="itemdesc">Employee ID:</pre> <pre class="itemvalue">@empl.Id</pre><br/><br/> 
+           <pre class="itemdesc">Name:</pre> <pre class="itemvalue">@empl.EmployeeName</pre><br/> <br/>
+           <pre class="itemdesc">NI Number:</pre> <pre class="itemvalue">@empl.NiNumber</pre><br/> <br/>
+           <pre class="itemdesc">Date of Birth:</pre> <pre class="itemvalue">@empl.Dob</pre><br/> <br/>
+           <pre class="itemdesc">Start Date:</pre> <pre class="itemvalue">@empl.StartDate</pre><br/> <br/>
+           <pre class="itemdesc">End Date:</pre> <pre class="itemvalue">@empl.EndDate</pre><br/> <br/>
+           <pre class="itemdesc">Address:</pre> <pre class="itemvalue">@empl.AddressLine1</pre><br/> <br/>
+           <pre class="itemdesc">Town:</pre> <pre class="itemvalue">@empl.Town</pre><br/> <br/>
+           <pre class="itemdesc">City:</pre> <pre class="itemvalue">@empl.City</pre><br/> <br/>
+           <pre class="itemdesc">Post Code:</pre> <pre class="itemvalue">@empl.PostCode</pre><br/><br/> 
+           <pre class="itemdesc">Telephone:</pre> <pre class="itemvalue">@empl.Telephone</pre><br/> <br/>
+           <pre class="itemdesc">Mobile:</pre> <pre class="itemvalue">@empl.Mobile</pre><br/> <br/>
+           <pre class="itemdesc">Email:</pre> <pre class="itemvalue">@empl.Email</pre><br/> <br/>
+           <pre class="itemdesc">Hourly Rate:</pre> <pre class="itemvalue">@empl.HourlyRate</pre><br/><br/> 
+           <p><button type="submit" class="btn btn-danger btn-sm" name="buttonSubmit">Delete</button></p><br/>
+         </form>
+      </div>
+  </div>
+ <div class="row">                 
+      <div class="col-md-3"> </div>
+      <div class="col-md-9">
+           <a href="~/Members/Employee/Employees" class="LnkBtnMyStyle">Employees List</a> <a href="~/Members/MainPage" class="LnkBtnMyStyle">Main Page</a> 
+      </div>
+  </div>
+</body>
+</html>

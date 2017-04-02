@@ -1,0 +1,358 @@
+﻿@using System.Web.Mvc;
+@using System.Text
+
+@{
+    int[] prodIds;
+    string[] prodNames;
+    int[] prodQtys;
+    int[] prodPrices;
+    
+    string lineNumber="0"; int IdOfCust=0; int InvGrandTotal=0;
+    int taskId=0; int customerId =0;int technicianId=0;
+    int prodId1=0;
+    var db = Database.Open("MeridianComputers");
+    string selectCommand = "SELECT task.Id,FORMAT(task.DateEntered,'dd-MM-yyyy') AS DateEntered, task.TechnicianId, task.CustomerId, task.Description, task.Quoted,task.QuoteAccepted";
+    selectCommand = selectCommand + ",task.Completed,task.CompletionDate, task.InvoiceId, task.ShortDesc, Employee.EmployeeName AS TechName, Customer.CustomerName AS CustName FROM Task ";
+    selectCommand = selectCommand +  "JOIN Employee ON Employee.Id=TechnicianId JOIN Customer ON Customer.Id = Task.CustomerId  WHERE Task.InvoiceId=0 " ;
+    var searchTerm="";
+    var selectedData = db.Query(selectCommand, searchTerm);
+
+    List<string> ourTasks = new List<string>();
+                foreach(var row in selectedData) {
+                        ourTasks.Add("Task ID:["+row.id+"] {Tech. Name:"+row.TechName + "Tech. ID:"+ row.TechnicianId +"}"
+                                                           +("#Cust. Name:"+row.CustName + "Cust. ID:"+ row.CustomerId +"#"));}
+    
+    var dbProdListLoad = Database.Open("MeridianComputers");
+    List<string> ourProducts = new List<string>();
+                foreach(var row in dbProdListLoad.Query("SELECT DISTINCT Name, Id,Price FROM Product")) {
+                        ourProducts.Add("Prod.ID:#"+ Convert.ToString(row.Id)+"/Prod. Name:["+row.Name+"]"+
+                          "Prod. Price:£"+Convert.ToString(row.Price));}
+
+
+}
+
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Meridian Computers</title>
+    <link href="~/content/bootstrap.css" rel="Stylesheet" media="screen" type="text/css" />
+    <link href="~/content/myStyles.css" rel="stylesheet" media="screen" type="text/css">
+    <link href="~/content/StyleSheet.css" rel="Stylesheet" media="screen" type="text/css" /> 
+    <script src="~/content/myScript.js"></script>
+    <script src="~/content/mySecond.js"></script> 
+ <style>
+      .validation-summary-errors{border:2px none red;color:red;font-weight:bold; margin:12px; background-color: #b6ff00}
+      .input-validation-valid{display: none;}
+      p.itemdesc { color:#f00; display: inline; font-size: 25px; } 
+      pre.itemdesc { color:#000; display: inline; font-size: 15px;} 
+      pre.itemdesc1 { color:#0026ff; display: inline; font-size: 12px; padding: 5px; height: fit-content;background-color: #e2cbcb} 
+      p.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #168800;}
+      select.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #808080; font-size: 15px}
+      pre.itemvalue{ color: #000;display: inline;font-size:15px; background-color: #BFF3F5;}       
+      input.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed} 
+      textarea.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed;width: 300px;height: 100px}      
+ </style>
+   
+<script>
+    function pickTaskId(howManyTaskEligeble) {
+        var makeHidden = "padding:5px 15px;background:#ffd800;border:0 none;cursor:pointer;-webkit-border-radius: 5px;border-radius: 5px;visibility: hidden;"
+        var makeVisible = "padding:5px 15px;background:#ffd800;border:0 none;cursor:pointer;-webkit-border-radius: 5px;border-radius: 5px;visibility: visible;"
+        if (howManyTaskEligeble != 0) {
+            var e = document.getElementById("TaskDropdown");
+            var strTaskInfo = e.options[e.selectedIndex].text;
+            var index1 = strTaskInfo.indexOf("[");
+            var index2 = strTaskInfo.indexOf("]");
+            strTaskIdInfo = strTaskInfo.substr(index1 + 1, (index2 - index1 - 1));
+            document.getElementById("TaskId").value = strTaskIdInfo;
+
+            strCustInfo = e.options[e.selectedIndex].text;
+            index1 = strCustInfo.indexOf("Cust. ID:"); index1 = index1 + 9;
+            index2 = strCustInfo.length;
+            strCustIdInfo = strCustInfo.substr(index1, (index2 - index1 - 1));
+            document.getElementById("customerId").value = parseInt(strCustIdInfo);
+            index1 = strCustInfo.indexOf("Cust. Name:"); index1 = index1 + 11;
+            index2 = strCustInfo.indexOf("Cust. ID:");
+            strCustNameInfo = strCustInfo.substr(index1, (index2 - index1));
+            document.getElementById("customerNamePara").innerHTML = "Name:" + strCustNameInfo;
+
+            strTechInfo = e.options[e.selectedIndex].text;
+            index1 = strTechInfo.indexOf("Tech. ID:"); index1 = index1 + 9;
+            index2 = strTechInfo.length;
+            strTechIdInfo = strTechInfo.substr(index1, (index2 - index1 - 1));
+            document.getElementById("technicianId").value = parseInt(strTechIdInfo);
+            index1 = strTechInfo.indexOf("Tech. Name:"); index1 = index1 + 11;
+            index2 = strTechInfo.indexOf("Tech. ID:");
+            strTechNameInfo = strTechInfo.substr(index1, (index2 - index1));
+            document.getElementById("technicianNamePara").innerHTML = "Name:" + strTechNameInfo;
+            document.getElementById("taskChooseWarning").innerHTML = "You must now add lines to your invoice from services/products list!";
+        } else {
+            alert("There are no invoicable task, redirecting to New Task!")
+            window.location = "http://meridian.kudsituluoglu.net/Members/Task/InsertTasks"
+        }
+
+        var GrandTotal = document.getElementById("totalofInvoice").value;
+
+        var taskExist = ((document.getElementById("TaskId").value) != 0);
+
+        if (GrandTotal > 0 && taskExist) {
+            document.getElementById("btnSaveInv").setAttribute("style", makeVisible);
+        } else {
+            document.getElementById("btnSaveInv").setAttribute("style", makeHidden);
+        }
+
+    }
+
+    function calcLineTotal(whichLine) {
+        var price = document.getElementById("ProdPrice" + whichLine).value;
+        var qty = document.getElementById("ProdQty" + whichLine).value;
+        price = parseFloat(price); qty = parseFloat(qty);
+        var LineTotal = price * qty;
+        document.getElementById("LineTotal" + whichLine).value = parseFloat(LineTotal).toFixed(2);
+        calculateGrandTotal();
+    }
+
+    function addLine() {
+        var whichLine = "";
+        var currentLine = document.getElementById("currentLineNumber").value;
+        var prdQtyZeroed = false;
+        var nthProdTotal = 0;
+
+        currentLine = parseInt(currentLine);
+        for (i = 1; i < currentLine + 1; i++) {
+            if (document.getElementById("LineTotal" + i) != null) {
+                nthProdTotal = document.getElementById("LineTotal" + i).value;
+            } else { nthProdTotal = -1; }
+            if (parseInt(nthProdTotal) == 0) { prdQtyZeroed = true; break; }
+        }
+
+
+        if (!prdQtyZeroed) {
+            currentLine = parseInt(currentLine) + 1;
+            document.getElementById("currentLineNumber").value = currentLine;
+            var div = document.createElement('div');
+            div.setAttribute("id", "invEntry" + currentLine);
+            div.setAttribute("style", "margin-left:17%");
+            document.getElementById("invForm").appendChild(div);
+
+
+            var elementProdId = document.createElement("input");
+            elementProdId.setAttribute("type", "text"); elementProdId.setAttribute("value", ""); elementProdId.setAttribute("name", "ProdId" + currentLine); elementProdId.setAttribute("id", "ProdId" + currentLine);
+            elementProdId.setAttribute("readonly", "readonly"); elementProdId.setAttribute("size", "1"); elementProdId.setAttribute("class", "myInputboxStyle");
+            var invEntrySection = document.getElementById("invEntry" + currentLine);
+            invEntrySection.appendChild(elementProdId);
+
+
+            var elementProdName = document.createElement("input");
+            elementProdName.setAttribute("type", "text"); elementProdName.setAttribute("value", ""); elementProdName.setAttribute("name", "ProdName" + currentLine); elementProdName.setAttribute("id", "ProdName" + currentLine);
+            elementProdName.setAttribute("readonly", "readonly"); elementProdName.setAttribute("size", "53"); elementProdId.setAttribute("class", "myInputboxStyle");
+            var invEntrySection = document.getElementById("invEntry" + currentLine);
+            invEntrySection.appendChild(elementProdName);
+
+            var elementProdPrice = document.createElement("input");
+            elementProdPrice.setAttribute("type", "text"); elementProdPrice.setAttribute("value", ""); elementProdPrice.setAttribute("name", "ProdPrice" + currentLine); elementProdPrice.setAttribute("id", "ProdPrice" + currentLine);
+            elementProdPrice.setAttribute("readonly", "readonly"); elementProdPrice.setAttribute("size", "4"); elementProdId.setAttribute("class", "myInputboxStyle");
+            var invEntrySection = document.getElementById("invEntry" + currentLine);
+            invEntrySection.appendChild(elementProdPrice);
+
+            var elementProdQty = document.createElement("input");
+            elementProdQty.setAttribute("type", "text"); elementProdQty.setAttribute("value", "1"); elementProdQty.setAttribute("name", "ProdQty" + currentLine); elementProdQty.setAttribute("id", "ProdQty" + currentLine);
+            whichLine = currentLine;
+            elementProdQty.setAttribute("size", "1"); elementProdQty.setAttribute("onblur", "calcLineTotal('" + whichLine + "');"); elementProdId.setAttribute("class", "myInputboxStyle");
+            var invEntrySection = document.getElementById("invEntry" + currentLine);
+            invEntrySection.appendChild(elementProdQty);
+
+            var elementLineTotal = document.createElement("input");
+            elementLineTotal.setAttribute("type", "text"); elementLineTotal.setAttribute("value", "0"); elementLineTotal.setAttribute("name", "LineTotal" + currentLine); elementLineTotal.setAttribute("id", "LineTotal" + currentLine);
+            elementLineTotal.setAttribute("readonly", "readonly"); elementLineTotal.setAttribute("size", "4"); elementProdId.setAttribute("class", "myInputboxStyle");
+            var invEntrySection = document.getElementById("invEntry" + currentLine);
+            invEntrySection.appendChild(elementLineTotal);
+        }
+        document.getElementById("taskChooseWarning").innerHTML = "You must reset quantity to zero in order to remove a line from the invoice";
+    }
+
+    function calculateGrandTotal() {
+        var currentLine = document.getElementById("currentLineNumber").value;
+        currentLine = parseInt(currentLine);
+        var nthProdTotal = 0;
+        var GrandTotal = 0;
+        for (i = 1; i < currentLine + 1; i++) {
+            if ((document.getElementById("LineTotal" + i)) === null) {
+                nthProdTotal = 0;
+            } else {
+                nthProdTotal = document.getElementById("LineTotal" + i).value;
+            }
+            nthProdTotal = parseFloat(nthProdTotal);
+            GrandTotal = GrandTotal + nthProdTotal;
+        }
+        document.getElementById("invGrandTotal").value = GrandTotal;
+        document.getElementById("totalofInvoice").value = GrandTotal;
+
+        var makeHidden = "padding:5px 15px;background:#ffd800;border:0 none;cursor:pointer;-webkit-border-radius: 5px;border-radius: 5px;visibility: hidden;"
+        var makeVisible = "padding:5px 15px;background:#ffd800;border:0 none;cursor:pointer;-webkit-border-radius: 5px;border-radius: 5px;visibility: visible;"
+        if (GrandTotal > 0 && taskExist) {
+            document.getElementById("btnSaveInv").setAttribute("style", makeVisible);
+        } else {
+            document.getElementById("btnSaveInv").setAttribute("style", makeHidden);
+        }
+    }
+
+    function removeLine() {
+        var currentLine = document.getElementById("currentLineNumber").value;
+        currentLine = parseInt(currentLine);
+
+        var lineToDelete = currentLine;
+
+
+        var prdQtyZeroed = false;
+        var nthProdQty = 0;
+        for (i = 1; i < currentLine + 1; i++) {
+            nthProdQty = document.getElementById("ProdQty" + i).value;
+            if (parseInt(nthProdQty) == 0) { prdQtyZeroed = true; lineToDelete = i; break; }
+        }
+
+        if (prdQtyZeroed) {
+            document.getElementById("currentLineNumber").value = currentLine - 1;
+
+            var prodIdNode = document.getElementById("ProdId" + lineToDelete);
+            prodIdNode.parentNode.removeChild(prodIdNode);
+
+            var prodNameNode = document.getElementById("ProdName" + lineToDelete);
+            prodNameNode.parentNode.removeChild(prodNameNode);
+
+            var prodQtyNode = document.getElementById("ProdQty" + lineToDelete);
+            prodQtyNode.parentNode.removeChild(prodQtyNode);
+
+            var prodPriceNode = document.getElementById("ProdPrice" + lineToDelete);
+            prodPriceNode.parentNode.removeChild(prodPriceNode);
+
+            var LineTotalNode = document.getElementById("LineTotal" + lineToDelete);
+            LineTotalNode.parentNode.removeChild(LineTotalNode);
+
+            calculateGrandTotal();
+
+        }
+
+    }
+
+    function pickProductId() {
+
+        var currentLine = document.getElementById("currentLineNumber").value;
+        currentLine = parseInt(currentLine);
+
+        var e = document.getElementById("ProdDropdown");
+        var product = e.options[e.selectedIndex].text;
+
+        //product id is extracted 
+        var index1 = product.indexOf("#");
+        var index2 = product.indexOf("/");
+        prdId = product.substr(index1 + 1, (index2 - index1 - 1));
+
+        //product name is extracted   
+        var index1 = product.indexOf("[");
+        var index2 = product.indexOf("]");
+        prdName = product.substr(index1 + 1, (index2 - index1 - 1));
+
+        //product price is extracted   
+        var index1 = product.indexOf("£");
+        var index2 = product.length;
+        prdPrice = product.substr(index1 + 1, (index2 - index1 - 1));
+        prdPrice = parseFloat(prdPrice).toFixed(2);
+
+        var prdIdRepeated = false;
+
+        for (i = 1; i < currentLine + 1; i++) {
+            if (document.getElementById("ProdId" + i) != null) {
+                nthProdId = document.getElementById("ProdId" + i).value;
+            } else {
+                nthProdId = -1;
+            }
+            if (nthProdId == prdId) { prdIdRepeated = true; break; }
+        }
+
+        if (!prdIdRepeated) {
+            addLine();
+            currentLine = document.getElementById("currentLineNumber").value;
+            currentLine = parseInt(currentLine);
+            for (j = 1; j < currentLine + 1; j++) {
+                nthProdId = document.getElementById("ProdId" + j).value;
+                if (nthProdId.length == 0) {
+                    document.getElementById("ProdId" + j).value = prdId;
+                    document.getElementById("ProdName" + j).value = prdName;
+                    document.getElementById("ProdPrice" + j).value = prdPrice;
+                    calcLineTotal(j);
+                    break;
+                }
+            }
+        }
+
+
+    }
+
+</script>
+</head>
+<body>
+ 
+<div class="row" style="padding-top: 75px">  
+        <div class="col-md-2"> </div>  
+        <div class="col-md-8">  
+            <h1>Generate Invoice</h1> 
+            <h5 style="padding-left: 300px" id="taskChooseWarning">You must choose a task/job to complete the invoice preperation!</h5>  
+        <br/> 
+        </div>
+        <div class="col-md-2"></div> 
+</div>
+ 
+<form  action = "saveinvoice.php" method="post" id="invForm"  >
+        <div class="row">
+          <div class="col-md-2"></div>
+          <div class="col-md-8">
+              <pre class="itemdesc">Task ID:</pre>
+              <input class="myInputboxStyle" type="number" name="TaskId" readonly="true" required id="TaskId" size="1" pattern="\d*" style="width: 2em" min ="1" value="@taskId" />
+                    <pre class="itemdesc1">Invoiceable Tasks</pre>
+                        <select name="Customer" id="TaskDropdown" onclick="pickTaskId(@ourTasks.Count);" class="itemvalue">
+                                @foreach(string ourTaskId in ourTasks)
+                                { <option id="selTask" value="@ourTaskId">@ourTaskId </option> }
+                         </select><br/><br/>
+              <pre class="itemdesc">Customer ID:</pre>
+              <input class="myInputboxStyle" type="number" name="CustomerId" readonly="true" id="customerId" size="2" pattern="\d*" style="width: 2em" min ="1" value="@customerId" /><pre id="customerNamePara" class="itemdesc"></pre><br/><br/>
+              <pre class="itemdesc">Technician ID:</pre>    
+              <input class="myInputboxStyle" type="number" name="TechnicianId" readonly="true" id="technicianId" size="2" pattern="\d*" style="width: 3em" min ="1" value="@technicianId" /><pre id="technicianNamePara" class="itemdesc"></pre><br/><br/>
+                    <pre class="itemdesc1">Products and Services</pre>
+                         <select name="Product" id="ProdDropdown" onchange="pickProductId();" class="itemvalue">
+                                 @foreach(string ourProdId in ourProducts)
+                                 { <option id="selProd" value="@ourProdId">@ourProdId </option> }
+                         </select><br/><br/>
+              <pre class="itemdesc"> Id   Name                                           Price  Qty   Total</pre>      
+              <input type="button" onclick="addLine();" value="+" />
+              <input type="button" onclick="removeLine();" value="-" />
+              <input type="submit" style="padding:5px 15px;background:#ffd800;border:0 none;cursor:pointer;-webkit-border-radius: 5px;border-radius: 5px;visibility: hidden;" id="btnSaveInv" value="Save Inv">
+              <br/>
+          </div>
+          <div class="col-md-2"></div>
+        </div>
+        <div>
+            <input type="text" class="hidden" name="CurrentLineNumber" id="currentLineNumber"value="@lineNumber"/>
+            <input type="text" class="hidden" name="TotalofInvoice" id="totalofInvoice"/>
+        </div>
+   
+</form>
+<br/>
+<div class="row">
+  <div class="col-md-2"></div>
+  <div class="col-md-2 text-left" style="padding-right: 0px;">
+      <span>Total:£</span><input class="myInputboxStyle" type="text" size="2" name="InvGrandTotal" id="invGrandTotal" value="@InvGrandTotal"/>
+  </div>
+</div>
+<br/>
+
+<div class="row">
+  <div class="col-md-2"></div>
+  <div class="col-md-2 text-left" style="padding-right: 0px;">
+      <a href="~/Members/Invoices/Invoices" class="LnkBtnMyStyle">Cancel</a></div>
+  </div>
+</div>
+
+</body>
+</html>            

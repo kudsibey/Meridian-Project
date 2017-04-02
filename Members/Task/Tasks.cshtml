@@ -1,0 +1,96 @@
+﻿
+@{
+    var db = Database.Open("MeridianComputers");
+    string selectCommand = "SELECT task.Id,FORMAT(task.DateEntered,'dd-MM-yyyy') AS DateEntered, task.TechnicianId, task.CustomerId, task.Description, task.Quoted,task.QuoteAccepted";
+    selectCommand = selectCommand + ",task.Completed,FORMAT(task.CompletionDate,'dd-MM-yyyy') AS DateCompleted, task.InvoiceId, task.ShortDesc, Employee.EmployeeName AS TechName, Customer.CustomerName AS CustName FROM Task ";
+    selectCommand = selectCommand +  "LEFT JOIN Employee ON Employee.Id=TechnicianId  LEFT JOIN Customer ON Customer.Id = Task.CustomerId" ;
+    var searchTerm = "";
+    string totalTskQty = "";
+    string singular = " is ", plural=" are ";
+    var selectedData = db.Query(selectCommand);
+
+    if(!Request.QueryString["searchDescription"].IsEmpty() ) {
+       selectCommand = "SELECT task.Id,FORMAT(task.DateEntered,'dd-MM-yyyy') AS DateEntered, task.TechnicianId, task.CustomerId, task.Description, task.Quoted,task.QuoteAccepted";
+       selectCommand = selectCommand + ",task.Completed,FORMAT(task.CompletionDate,'dd-MM-yyyy') AS DateCompleted, task.InvoiceId, task.ShortDesc, Employee.EmployeeName AS TechName, Customer.CustomerName AS CustName FROM Task ";
+       selectCommand = selectCommand +  "JOIN Employee ON Employee.Id=TechnicianId JOIN Customer ON Customer.Id = Task.CustomerId WHERE CustomerId =@0" ;        
+       searchTerm = Request.QueryString["searchDescription"];
+       selectedData = db.Query(selectCommand, searchTerm);
+    } 
+
+    var grid = new WebGrid(source: selectedData, defaultSort: "DateEntered", rowsPerPage:5);
+    totalTskQty = Convert.ToString(selectedData.Count()) + (selectedData.Count()>1? " tasks ":" task ")+ "available";
+    if (selectedData.Count()==0) {totalTskQty="NO RECORDS";}
+
+}
+    
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+   <head>
+        <meta charset="utf-8" />
+        <link href="~/content/bootstrap.css" rel="Stylesheet" media="screen" type="text/css" />
+        <link href="~/content/StyleSheet.css" rel="Stylesheet" media="screen" type="text/css" /> 
+        <link href="~/content/myStyles.css" rel="Stylesheet" media="screen" type="text/css" /> 
+       <script src="~/content/jquery-1.9.1.js"></script>
+       <script src="~/content/myScript.js"></script>
+       <script src="~/content/mySecond.js"></script>
+        <title>Customers</title>
+    </head>
+    <body>
+ <div class="row" style="padding-top:50px">
+   <div class="col-md-2" style="padding-left:200px;padding-top:25px;"><img alt="Employees" class="img-rounded" width="75px" height="75px"src="~/Images/task.png"/> </div>
+   <div class="col-md-10">
+        <h2>Search</h2>
+        <form method="get">
+            <div>
+                      <label for="searchDescription">Search by Customer ID:</label>
+                      <input type="text" name="searchDescription" pattern="\d*" size="2" min ="1" value="@searchTerm" />
+                      <input type="Submit" value="Cust.ID Search" /><br/>
+                      (There 
+                         @if (@totalTskQty.IndexOf("mers")==-1){ @singular @totalTskQty;} else {@plural  @totalTskQty;} in current filter/search.)<br/>
+                        (Leave blank to list all tasks.)<br/>
+           </div>
+        </form>
+   </div>
+  
+</div>
+
+<div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
+        <h1 class="masterTooltip" title="@totalTskQty">Tasks</h1>
+                @grid.GetHtml(
+                    tableStyle: "grid",
+                    headerStyle: "head",
+                    alternatingRowStyle: "alt",
+                    columns: grid.Columns(
+                    grid.Column(format: @<a href="~/Members/Task/UpdateTasks?id=@item.ID" class="btn btn-link">Edit</a>),
+                    grid.Column("Id","ID"),
+                    grid.Column("DateEntered","Date"),
+                    grid.Column("TechnicianId", "Tech.ID"),
+                    grid.Column("TechName", "Tech.Name"),
+                    grid.Column("CustName", "Cust.Name"),
+                    grid.Column("CustomerId","Cust.ID"),
+                    grid.Column("ShortDesc","Description"),
+                    grid.Column("Quoted"),
+                    grid.Column("QuoteAccepted","Q.Accepted"),
+                    grid.Column("Completed"),
+                    grid.Column("DateCompleted","Completed On"),
+                    grid.Column("InvoiceId"),
+                    grid.Column(format: @<a href="~/Members/Task/DeleteTask?id=@item.ID" class="btn btn-link">Delete</a>)))
+  </div>
+    <div class="md-col-1"></div> 
+ </div>
+<br/>
+       <div class="row">
+            <div class="col-md-1">
+            </div>
+            <div class="col-md-11">
+              <a href="~/Members/Task/InsertTasks" class="LnkBtnMyStyle">Add New Task</a>
+              <a href="~/Members/MainPage" class="LnkBtnMyStyle">Main Page</a>
+            </div>
+        </div>       
+    </body>
+</html>

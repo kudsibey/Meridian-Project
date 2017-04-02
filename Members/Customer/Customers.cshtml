@@ -1,0 +1,93 @@
+﻿
+@{
+
+    var db = Database.Open("MeridianComputers");
+    var selectCommand = "SELECT * FROM Customer";
+    var searchTerm = "";
+    string totalCstQty = "";
+    string singular = " is ", plural=" are ";
+
+
+    if(!Request.QueryString["searchDescription"].IsEmpty() ) {
+        selectCommand = "SELECT * FROM Customer WHERE CustomerName  LIKE '%" + searchTerm.Trim() + "%'";
+        searchTerm = Request.QueryString["searchDescription"];
+    }
+
+    var selectedData = db.Query(selectCommand, searchTerm);
+    var grid = new WebGrid(source: selectedData, defaultSort: "CustomerName", rowsPerPage:5);
+    totalCstQty = Convert.ToString(selectedData.Count()) + (selectedData.Count()>1? " customers ":" customer ")+ "available";
+    if (selectedData.Count()==0) {totalCstQty="NO RECORDS";}
+}
+    
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <link href="~/content/bootstrap.css" rel="Stylesheet" media="screen" type="text/css" />
+        <link href="~/content/StyleSheet.css" rel="Stylesheet" media="screen" type="text/css" />  
+        <link href="~/content/myStyles.css" rel="Stylesheet" media="screen" type="text/css" /> 
+        <script src="~/content/myScript.js"></script> 
+        <title>Customers</title>
+
+    </head>
+<body>
+<div class="row" style="padding-top:50px">
+   <div class="col-md-2" style="padding-left:200px;padding-top:25px;"><img alt="Customers" class="img-rounded" width="75px" height="75px"src="~/Images/customers.png"/> </div>
+   <div class="col-md-10">
+        <h2>Search</h2>
+        <form method="get">
+            <div>
+                <label for="searchName">Customer name to look for:</label>
+                <input type="text" name="searchDescription" value="@searchTerm" />
+                <input type="Submit" value="Name Search" /><br/>
+                (There 
+                   @if (@totalCstQty.IndexOf("mers")==-1){ @singular @totalCstQty;} else {@plural  @totalCstQty;} in current filter/search.)<br/>
+                (Leave blank to list all customers.)<br/>
+            </div>
+        </form>
+   </div>
+</div>
+
+ <div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-11">
+        <h1 class="masterTooltip" title="@totalCstQty">Customers</h1>
+         <div>
+           @grid.GetHtml(
+            tableStyle: "grid",
+            headerStyle: "head",
+            alternatingRowStyle: "alt",
+            columns: grid.Columns(
+            grid.Column(format: @<a href="~/Members/Customer/UpdateCustomers?id=@item.ID" class="btn btn-link">Edit</a>),
+            grid.Column("Id","ID"),
+            grid.Column("CustomerName","Name"),
+            grid.Column("ContactPerson","Contact Name"),
+            grid.Column("AddressLine1","Address"),
+            grid.Column("Town"),
+            grid.Column("City"),
+            grid.Column("PostCode"),
+            grid.Column("Telephone"),
+            grid.Column("Mobile"),
+            grid.Column("email"),
+            grid.Column("WebSite","Web Site"),
+            grid.Column(format: @<a href="~/Members/Customer/DeleteCustomer?id=@item.ID" class="btn btn-link">Delete</a>)))</div>
+    </div>
+ </div>
+<br/>
+
+       <div class="row">
+            <div class="col-md-1">
+            </div>
+            <div class="col-md-11">
+              <a href="~/Members/Customer/InsertCustomer" class="LnkBtnMyStyle">Add Customer</a>
+              <a href="~/Members/MainPage" class="LnkBtnMyStyle">Main Page</a>
+            </div>
+        </div>       
+
+    
+     </body>
+   
+</html>

@@ -1,0 +1,92 @@
+﻿@{
+    var db = Database.Open("MeridianComputers");
+    var  selectCommand = "SELECT *,FORMAT ( Employee.Dob, 'd', 'en-gb' ) as empDob,FORMAT ( Employee.EndDate, 'd', 'en-gb' ) as empEnd,";
+         selectCommand = selectCommand + " FORMAT ( Employee.StartDate, 'd', 'en-gb' ) as empSDate, FORMAT ( Employee.HourlyRate, 'C', 'en-gb'  ) AS hrRate FROM Employee";
+    var searchTerm = Request.QueryString["searchDescription"];
+    if (searchTerm !=null) {searchTerm = searchTerm.Trim();} else {searchTerm="";}
+    string totalEmpQty = "";
+    string singular = " is ", plural=" are ";
+
+
+     if(!searchTerm.IsEmpty() ) {
+        selectCommand = "SELECT *,FORMAT ( Employee.Dob, 'd', 'en-gb' ) as empDob,FORMAT ( Employee.EndDate, 'd', 'en-gb' ) as empEnd,";
+        selectCommand = selectCommand + " FORMAT ( Employee.StartDate, 'd', 'en-gb' ) as empSDate,  FORMAT ( Employee.HourlyRate, 'C', 'en-gb'  ) AS hrRate FROM Employee WHERE EmployeeName  LIKE '%" + searchTerm.Trim() + "%'";
+    }
+
+    var selectedData = db.Query(selectCommand, searchTerm);
+    var grid = new WebGrid(source: selectedData, defaultSort: "EmployeeName", rowsPerPage:5);
+    totalEmpQty = Convert.ToString(selectedData.Count()) + (selectedData.Count()>1? " employees ":" employee ")+ "available";
+    if (selectedData.Count()==0) {totalEmpQty="NO RECORDS";}
+}
+    
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+   <head>
+        <meta charset="utf-8" />
+        <link href="~/content/bootstrap.css" rel="Stylesheet" media="screen" type="text/css" />
+        <link href="~/content/StyleSheet.css" rel="Stylesheet" media="screen" type="text/css" /> 
+        <link href="~/content/myStyles.css" rel="Stylesheet" media="screen" type="text/css" />  
+        <script src="~/content/myScript.js"></script>
+        <title>Employees</title>
+    </head>
+    <body>
+
+ <div class="row" style="padding-top:50px">
+   <div class="col-md-2" style="padding-left:200px;padding-top:25px;"><img alt="Employees" class="img-rounded" width="75px" height="75px"src="~/Images/employee.gif"/> </div>
+   <div class="col-md-10">
+        <h2>Search</h2>
+        <form method="get">
+            <div>
+                      <label for="searchDescription">Employee name to look for:</label>
+                      <input type="text" name="searchDescription" value="@searchTerm" />
+                      <input type="Submit" value="Name Search" /><br/>
+                      (There 
+                         @if (@totalEmpQty.IndexOf("yees")==-1){ @singular @totalEmpQty;} else {@plural  @totalEmpQty;} in current filter/search.)<br/>
+                      (Leave blank to list all employees)<br/>
+           </div>
+        </form>
+   </div>
+</div>
+
+<div class="row">
+   <div class="col-md-1"> </div> 
+    <div class="col-md-10">
+        <h1 class="masterTooltip" title="@totalEmpQty">Employees</h1>
+        @grid.GetHtml(
+            tableStyle: "grid",
+            headerStyle: "head",
+            alternatingRowStyle: "alt",
+            columns: grid.Columns(
+            grid.Column(format: @<a href="~/Members/Employee/UpdateEmployees?id=@item.ID" class="btn btn-link">Edit</a>),
+            grid.Column("Id","ID"),
+            grid.Column("EmployeeName","Name"),
+            @*grid.Column("NiNumber","NI No."),*@
+            grid.Column("empDob","Date of Birth"),
+            grid.Column("empSDate","Start Date"),
+            @*grid.Column("empEnd", "End Date"),*@
+            grid.Column("AddressLine1","Address"),
+            grid.Column("Town"),
+            grid.Column("City"),
+            grid.Column("PostCode","Post Code"),
+            grid.Column("Telephone"),
+            grid.Column("Mobile"),
+            grid.Column("Email"),
+            grid.Column("hrRate","Hourly Rate(£)"),
+            grid.Column(format: @<a href="~/Members/Employee/DeleteEmployee?id=@item.ID" class="btn btn-link">Delete</a>)))
+     </div>
+    <div class="md-col-1"></div> 
+ </div>
+<br/>
+       <div class="row">
+            <div class="col-md-1">
+            </div>
+            <div class="col-md-11">
+              <a href="~/Members/Employee/InsertEmployee" class="LnkBtnMyStyle">Add Employee</a>
+              <a href="~/Members/MainPage" class="LnkBtnMyStyle">Main Page</a>
+            </div>
+        </div>       
+    </body>
+</html>

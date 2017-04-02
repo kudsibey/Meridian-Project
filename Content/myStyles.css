@@ -1,0 +1,36 @@
+
+legend.scheduler-border {
+    border: solid 1px #DDD !important;
+    padding: 0 10px 10px 10px !important;
+    border-bottom: none !important;
+}
+
+legend.scheduler-border {
+    width: auto !important;
+    border: none !important;
+    font-size: 14px !important;
+}
+
+input[type=text]:focus {
+    background-color: lightblue;
+}
+
+.grid { margin: 4px; border-collapse: collapse; table-layout: inherit; }
+.grid th, .grid td {border: 1px solid #C0C0C0; padding: 5px; }
+.head { background-color: #E8E8E8; font-weight: bold; color: #FFF;}
+.alt { background-color: #E8E8E8; color: #000; }
+.grid tr:hover {background-color: #fffddc;}
+.grid selectedRow { background-color: #ff6a00 !important;}
+
+body{
+        background-color:#e8edee;
+}
+
+input[type=number]{
+    width: 70px !important;
+} 
+
+input[type=date]{
+    width: 140px !important;
+} 
+

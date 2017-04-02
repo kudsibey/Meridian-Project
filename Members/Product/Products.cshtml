@@ -1,0 +1,83 @@
+﻿
+@{
+    var db = Database.Open("MeridianComputers");
+    var selectCommand = "SELECT *, FORMAT(Product.Price,'C','en-gb') as sterlingPrice FROM Product";
+    var searchTerm = Request.QueryString["searchDescription"];
+    string totalPrdQty = "";
+    string singular = " is ", plural=" are ";
+
+    if(!searchTerm.IsEmpty() ) {
+        selectCommand = "SELECT *, FORMAT(Product.Price,'C','en-gb') as sterlingPrice FROM Product WHERE Description LIKE '%" + searchTerm.Trim() + "%'";
+    }
+
+    var selectedData = db.Query(selectCommand, searchTerm);
+    var grid = new WebGrid(source: selectedData, defaultSort: "Description", rowsPerPage:5);
+    totalPrdQty = Convert.ToString(selectedData.Count()) + (selectedData.Count()>1? " products ":" product ")+ "available";
+    if (selectedData.Count()==0) {totalPrdQty="NO RECORDS";}
+}
+    
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <link href="~/content/bootstrap.css" rel="Stylesheet" media="screen" type="text/css" />
+        <link href="~/content/StyleSheet.css" rel="Stylesheet" media="screen" type="text/css" />  
+        <link href="~/content/myStyles.css" rel="Stylesheet" media="screen" type="text/css" />  
+        <script src="~/content/myScript.js"></script>
+        <title>Customers</title>
+        
+
+</head>
+<body>
+ <div class="row" style="padding-top:50px">
+   <div class="col-md-3"></div>
+   <div class="col-md-1" style="padding-left:75px;padding-top:25px;"><img alt="Products" class="img-rounded" width="75px" height="75px"src="~/Images/itProds.png"/> </div>
+   <div class="col-md-8" style="padding-left:45px;">
+        <h2>Search</h2>
+        <form method="get">
+            <div>
+               <label for="searchDescription">Product description to look for:</label>
+                <input type="text" name="searchDescription" value="@searchTerm" />
+                <input type="Submit" value="Search Desc." /><br/>
+                (There 
+                   @if (@totalPrdQty.IndexOf("ducts")==-1){ @singular @totalPrdQty;} else {@plural  @totalPrdQty;} in current filter/search.)<br/>
+                (Leave blank to list all products.)<br/>
+           </div>
+        </form>
+   </div>
+</div>
+<br/>
+
+
+<div class="row" >
+   <div class="col-md-3"></div>
+    <div class="col-md-9" style="padding-left:45px;">
+            <h1 class="masterTooltip" title="@totalPrdQty">Products</h1>
+                @grid.GetHtml(
+                    tableStyle: "grid",
+                    headerStyle: "head",
+                    alternatingRowStyle: "alt",
+                    columns: grid.Columns(
+                    grid.Column(format: @<a href="~/Members/Product/UpdateProducts?id=@item.ID" class="btn btn-link">Edit</a>),
+                    grid.Column("Id", "ID"),
+                    grid.Column("Name"),
+                    grid.Column("Description"),
+                    grid.Column("Quantity","Qty"),
+                    grid.Column("SupplierId","Sup.ID"),
+                    grid.Column("sterlingPrice","Price"),
+                    grid.Column(format: @<a href="~/Members/Product/DeleteProduct?id=@item.ID" class="btn btn-link">Delete</a>)))
+  </div>
+ </div>
+<br/>
+<div class="row">
+      <div class="col-md-3"></div>
+      <div class="col-md-9" style="padding-left:45px;">
+         <a href="~/Members/Product/InsertProducts" class="LnkBtnMyStyle">Add Product</a>
+         <a href="~/Members/MainPage" class="LnkBtnMyStyle">Main Page</a>
+      </div>
+</div>       
+    </body>
+</html>

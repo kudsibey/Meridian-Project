@@ -1,0 +1,161 @@
+﻿
+@{
+    Validation.RequireField("Name", "Product name is required.");
+    Validation.RequireField("Description", "Product description is required.");
+    Validation.RequireField("Price", "Product price is required.");
+    Validation.RequireField("Quantity", "Product quantity is required.");
+    Validation.RequireField("SupplierId", "Supplier ID is required.");
+
+    int id = 0;
+   
+    var name = "";
+    var description = "";
+    decimal price = 0;
+    int quantity = 0;
+    int supplierId = 0;
+    int matchingSuppIdNo=0;
+    var fetchedSuppName="";
+    var db = Database.Open("MeridianComputers");
+
+    if(!Request.QueryString["ID"].IsEmpty()){
+      id = Convert.ToInt16(Request.QueryString["ID"]);
+ 
+      
+      var dbCommand = "SELECT * FROM Product WHERE id = @0";
+      var row = db.QuerySingle(dbCommand, id);
+ 
+      name = row.Name;
+      description = row.Description;
+      price = decimal.Round(row.Price, 2, MidpointRounding.AwayFromZero);
+      quantity=row.Quantity;
+      supplierId=row.SupplierId;
+      id = row.id;
+       try {fetchedSuppName = db.QuerySingle("SELECT SupplierName, Id FROM Supplier WHERE id=@0",supplierId).SupplierName;}
+            catch {fetchedSuppName="Supplier with such ID not found in database.";}
+    } else{ Validation.AddFormError("No product was selected.");}
+ 
+
+    List<string> ourSuppliers = new List<string>();
+                foreach(var row in db.Query("SELECT DISTINCT SupplierName, id FROM Supplier")) {
+                        ourSuppliers.Add("Supp. Name:"+row.SupplierName + "-->> ID:["+ Convert.ToString(row.id)+"]");}
+    if(IsPost){
+        name= Request.Form["Name"];
+        description= Request.Form["Description"];
+        price= string.IsNullOrEmpty(Request.Form["Price"])?0:Convert.ToDecimal(Request.Form["Price"]);
+        quantity= string.IsNullOrEmpty(Request.Form["Quantity"])?0:Convert.ToInt16(Request.Form["Quantity"]);
+        supplierId= string.IsNullOrEmpty(Request.Form["SupplierId"])?0:Convert.ToInt16(Request.Form["SupplierId"]);
+        if(supplierId!=0){
+            var suppliers = db.Query("SELECT * FROM Supplier WHERE [id]=@0",supplierId).ToList();
+            matchingSuppIdNo = suppliers.Count;
+ 
+            if((Validation.IsValid()) && (matchingSuppIdNo==1) && ModelState.IsValid) {
+                var updateCommand = "UPDATE Product SET Name=@0, Description=@1, Price =@2, Quantity=@3, SupplierId=@4 WHERE Id=@5";
+                db.Execute(updateCommand, name, description, price, quantity, supplierId, id);
+                // Display the page that lists products.
+                Response.Redirect("~/Members/Product/Products");
+            } else {
+                Validation.AddFormError("No Valid supplier Id was seleced!");    
+            }
+         } else {Validation.AddFormError("Supplier Id can't be '0'!");} 
+ 
+     }
+}
+<!DOCTYPE html>
+<html>
+<head>
+ <title>Add Customers</title>
+ <link href="~/content/bootstrap.css" rel="stylesheet" media="screen" type="text/css">
+ <link href="~/content/myStyles.css" rel="stylesheet" media="screen" type="text/css">
+ <link href="~/content/StyleSheet.css" rel="stylesheet" media="screen" type="text/css">
+ <style type="text/css">
+      .validation-summary-errors{border:2px dashed red;color:red;font-weight:bold; margin:12px; }
+      p.itemdesc { color:#f00; display: inline; font-size: 25px; } 
+      pre.itemdesc { color:#f00; display: inline; font-size: 15px;} 
+      p.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #808080;}
+      pre.itemvalue{ color: #000;display: inline;font-size:15px; background-color: #BFF3F5;}       
+      input.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed}    
+ </style>
+</head>
+<body>
+
+<script type="text/javascript">
+    function pickSupplierId() {
+        var e = document.getElementById("SupplierDropdown");
+        var strUser = e.options[e.selectedIndex].text;
+        var index1 = strUser.indexOf("[");
+        var index2 = strUser.indexOf("]");
+        strUser = strUser.substr(index1 + 1, (index2 - index1 - 1));
+        document.getElementById("SupplierId").value = strUser;
+    }
+
+    function makeSuppListVisibleOrNot() {
+        var currentStatus = document.getElementById("SupplierDropdown").getAttribute("style");
+        if (currentStatus == "visibility:  hidden") {
+            document.getElementById("SupplierDropdown").setAttribute("style", "visibility: visible");
+            document.getElementById("lblSuppList").setAttribute("style", "visibility: visible");
+            document.getElementById("infoPanel1").textContent = "Please click on label (Supplier ID) to hide list of suppliers"
+        }
+        if (currentStatus == "visibility: visible") {
+            document.getElementById("SupplierDropdown").setAttribute("style", "visibility:  hidden");
+            document.getElementById("lblSuppList").setAttribute("style", "visibility:  hidden");
+            document.getElementById("infoPanel1").textContent = "Please click on label (Supplier ID) label for list of suppliers"
+        }
+    }
+
+    function makeSuppListVisible() {
+        document.getElementById("SupplierDropdown").setAttribute("style", "visibility: visible;");
+        document.getElementById("lblSuppList").setAttribute("style", "visibility: visible;");
+    }
+
+    function makeSuppListHidden() {
+        document.getElementById("SupplierDropdown").setAttribute("style", "visibility: hidden;");
+        document.getElementById("lblSuppList").setAttribute("style", "visibility: hidden;");
+    }
+</script>
+
+   
+
+
+<form method="post" action="">
+     <div class="row>">
+       <div class="col-md-2"></div>
+       <div class="col-md-10">
+           <h1>Update Product</h1><br/>
+           <pre class="itemdesc">Name:</pre>
+           <input class="myInputboxStyle" name="Name" type="text" size="45" maxlength="50" value="@name" /> <br/> <br/>
+           <pre class="itemdesc">Description:</pre>
+           <input class="myInputboxStyle" name="Description" type="text" size="50" maxlength="50" value="@description" /><br/><br/>
+           <pre class="itemdesc">Price:</pre>
+           <input class="myInputboxStyle" name="Price" type="number"  pattern="[0-9]+([\.,][0-9]+)?" step="any"  size="3" value="@price" /><br/><br/>
+           <pre class="itemdesc" onclick="makeSuppListVisibleOrNot();">Supplier ID:</pre>
+           <input class="myInputboxStyle" id="SupplierId"  name="SupplierId" type="text" pattern="\d*" size="2" min ="1" value="@supplierId" /> 
+           <span id="txtSuppName">@fetchedSuppName</span>
+           <label for="SupplierDropdown" style="visibility: hidden" id="lblSuppList">Suppliers</label>
+           <select name="Supplier" style="visibility:  hidden" id="SupplierDropdown" onchange="pickSupplierId();" class="itemdesc"> 
+                     @foreach(string ourSupplierName in ourSuppliers)
+              { <option id="selSupp" value="@ourSupplierName">@ourSupplierName </option> }
+           </select><br/><br/>
+           <pre class="itemdesc">Quantity:</pre>
+           <input class="myInputboxStyle" name="Quantity" type="text" size="3" pattern="\d*" value="@quantity"/><br/> </br> 
+           <p style="font-size: small" id="infoPanel1">Please click on label (Supplier ID) label for list of suppliers</p>
+
+           <input name="requiredSupplierQty"  class="hidden" size="3" value="1" />
+           <button type="submit" class="btn btn-success btn-sm" name="buttonSubmit">Update</button><br/><br/>
+     </div>  
+    </div>
+    <div class="row">                 
+          <div class="col-md-2"> </div>
+          <div class="col-md-10">
+               <a href="~/Members/Product/Products" class="LnkBtnMyStyle">Products List</a> <a href="~/Members/MainPage" class="LnkBtnMyStyle">Main Page</a> 
+          </div>
+     </div>
+    <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-2">
+              <p class="input-validation-error">@Html.ValidationSummary()</p>
+        </div>
+        <div class="col-md-8"></div>
+    </div>
+</form>
+</body>
+</html>

@@ -1,0 +1,158 @@
+﻿@{
+      
+
+   String dateEntered = DateTime.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+   var technicianId=0;
+   var customerId=0;
+   var shortDesc="";
+   var description="";
+   var quoted ="";
+   var quoteAccepted="";
+   var completed = "";
+   string  completionDate = DateTime.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+   var invoiceId=0;
+   int? custIdNumber=customerId;
+   int matchingCustIdNo=1;
+   int? technicianIdNumber=technicianId;
+   int matchingTechIdNo=1;
+   
+   var dbCustListLoad = Database.Open("MeridianComputers");
+   List<string> ourCustomers = new List<string>();
+                foreach(var row in dbCustListLoad.Query("SELECT DISTINCT CustomerName, Id FROM Customer")) {
+                        ourCustomers.Add("Cust. Name:"+row.CustomerName + "-->> ID:["+ Convert.ToString(row.Id)+"]");}
+   var dbTechListLoad = Database.Open("MeridianComputers");
+   List<string> ourTechnicians = new List<string>();
+                foreach(var row in dbTechListLoad.Query("SELECT DISTINCT EmployeeName, Id FROM Employee")) {
+                        ourTechnicians.Add("Tech. Name:"+row.EmployeeName + "-->> ID:["+ Convert.ToString(row.Id)+"]");}
+
+if (IsPost){
+         dateEntered=Request.Form["DateEntered"];
+         technicianId=Convert.ToInt16(Request.Form["TechnicianId"]);
+         customerId=Convert.ToInt16(Request.Form["CustomerId"]);
+         shortDesc=Request.Form["ShortDesc"];
+         description=Request.Form["Description"];
+         quoted =Request.Form["Quoted"];
+         quoteAccepted=Request.Form["QuoteAccepted"];
+         completed = Request.Form["Completed"];
+         completionDate = Request.Form["CompletionDate"];
+         invoiceId=Convert.ToInt16(Request.Form["InvoiceId"]); 
+         var dbCust = Database.Open("MeridianComputers");
+         matchingCustIdNo=0;
+         matchingTechIdNo=0;
+
+         if (customerId != 0){
+            var customers = dbCust.Query("SELECT * FROM Employee WHERE [id]=@0",customerId).ToList();
+            matchingCustIdNo= customers.Count;
+         } else {}
+
+         if (technicianId != 0){
+            var employees = dbCust.Query("SELECT * FROM Customer WHERE [id]=@0",technicianId).ToList();
+            matchingTechIdNo= employees.Count;
+         } else {}
+        
+        if((Validation.IsValid()) && (technicianId!=0) && (customerId!=0) && ModelState.IsValid){
+               var db = Database.Open("MeridianComputers");
+                var insertCommand = "INSERT INTO Task (DateEntered, TechnicianId, CustomerId, Description, Quoted,QuoteAccepted,";
+                insertCommand = insertCommand +"Completed, completionDate, InvoiceId, ShortDesc) VALUES (@0,@1,@2,@3,@4,@5,@6,@7,@8,@9)";
+                db.Execute(insertCommand, dateEntered, technicianId, customerId, description, quoted,quoteAccepted, completed,completionDate, invoiceId, shortDesc);
+                Response.Redirect("~/Members/Task/Tasks");
+        } else {
+            string errMsgConnector ="";
+            string errMsg1 ="";
+            string errMsg2="";
+            if(matchingCustIdNo == 0){ errMsg1="Customer";}
+            if(matchingTechIdNo == 0){ errMsg2="Technician/Employee";}
+            if(matchingTechIdNo == 0 && matchingCustIdNo== 0) {errMsgConnector=" and ";}
+            Validation.AddFormError("No Valid "+ errMsg1 + errMsgConnector+errMsg2 + " was seleced!");
+        }
+   }
+
+}
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+   <meta charset="utf-8" />
+   <title>Add Task Data</title>
+   <script src="~/content/jquery-1.9.1.js"></script>
+   <script src="~/content/myScript.js"></script>
+   <script src="~/content/mySecond.js"></script> 
+   <link href="~/content/bootstrap.css" rel="stylesheet" media="screen" type="text/css">
+   <link href="~/content/myStyles.css" rel="stylesheet" media="screen" type="text/css">
+   <link href="~/content/StyleSheet.css" rel="stylesheet" media="screen" type="text/css">
+<style>
+      .validation-summary-errors{border:2px none red;color:red;font-weight:bold; margin:12px; background-color: #b6ff00}
+      .input-validation-valid{display: none;}
+      p.itemdesc { color:#f00; display: inline; font-size: 25px; } 
+      pre.itemdesc { color:#000; display: inline; font-size: 15px;} 
+      pre.itemdesc1 { color:#0026ff; display: inline; font-size: 12px; padding: 5px; height: fit-content;background-color: #e2cbcb} 
+      p.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #168800;}
+      select.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #808080; font-size: 15px}
+      pre.itemvalue{ color: #000;display: inline;font-size:15px; background-color: #BFF3F5;}       
+      input.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed} 
+      textarea.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed;width: 300px;height: 100px}      
+ </style>
+</head>
+<body>
+
+<form method="post" action="">
+     <div class="row>">
+       <div class="col-md-2"></div>
+       <div class="col-md-10">
+              <h1>Add New Task</h1>
+              <pre class="itemdesc" onclick="makeCustListVisibleOrNot();">Customer ID:</pre>
+              <input required class="myInputboxStyle" type="number" name="CustomerId"  id="CustomerId"  pattern="\d*" size="2" min ="1" value="@customerId" />
+              <label for="CustomerDropdown" style="visibility: hidden" id="lblCustList">Customers</label>
+              <select name="Customer" id="CustomerDropdown" style="visibility: hidden" onchange="pickCustomerId();" class="itemvalue">
+                   @foreach(string ourCustomerName in ourCustomers)
+                   { <option id="selCust" value="@ourCustomerName">@ourCustomerName </option> }
+              </select><br/><br/>
+              <pre class="itemdesc" onclick="makeTechListVisibleOrNot();">Technician ID:</pre>
+              <input required class="myInputboxStyle" type="number" id="TechnicianId"  name="TechnicianId" size="1" pattern="\d*" size="2" min ="1" value="@technicianId" />
+              <label for="TechnicianDropdown" style="visibility: hidden" id="lblTechList">Technicians</label>
+              <select name="Technician" id="TechnicianDropdown" style="visibility: hidden" onclick="pickTechnicianId();" class="itemvalue">
+                   @foreach(string ourTechnicianName in ourTechnicians)
+                   { <option id="selTech" value="@ourTechnicianName">@ourTechnicianName </option> }
+              </select><br/><br/>
+              <pre class="itemdesc">Date Entered:</pre>
+              <input required class="myInputboxStyle" type="date" name="DateEntered" size="4" id="dteDateEntered" value="@dateEntered" /><br/><br/>
+              <pre class="itemdesc">Short Description:</pre>
+              <input class="myInputboxStyle" type="text" name="ShortDesc" size="40" value="@shortDesc" /><br/><br/>
+              <pre class="itemdesc">Quote given?:</pre>
+              <input required class="myInputboxStyle" type="text" disabled name ="Quoted"  id="txtQuoted" size="2" value="@quoted" />
+              <input onchange="toggleValue('txtQuoted','chk4Quoted')" type="checkbox" value="@quoted" id="chk4Quoted"></input>
+              <br/><br/>
+              <pre class="itemdesc">Quote accepted?:</pre>
+              <input required class="myInputboxStyle" type="text" disabled name="QuoteAccepted"  id="txtQAccepted" size="2" value="@quoteAccepted" />
+              <input onclick="toggleValue('txtQAccepted','chk4QAccepted','No')" type="checkbox" value="@quoteAccepted" id="chk4QAccepted"></input>
+              <br/><br/>
+              <pre class="itemdesc">Task Completed?:</pre>
+              <input required class="myInputboxStyle" type="text" disabled name="Completed" id="txtCompleted" size="2" value="@completed" />
+              <input onclick="toggleValue('txtCompleted','chk4Completed','No')" type="checkbox" id="chk4Completed"></input>
+              <br/><br/>
+              <pre class="itemdesc">Completion Date:</pre>
+              <input class="myInputboxStyle" type="date" name="CompletionDate" size="4" id="dteCompletionDate"  value="@completionDate" /><br/><br/>
+              <pre class="itemdesc">Details:</pre> <br/><br/>
+              <textarea class="myInputboxStyle" style="width:500px;height:150px;resize: none;" name="Description">@description </textarea><br/><br/>
+              <p style="font-size: small" id="infoPanel1">Please click on label (Customer ID) label for list of suppliers</p> 
+              <p style="font-size: small" id="infoPanel2">Please click on label (Technician ID) label for list of technicians</p> 
+              <button type="submit" class="btn btn-success btn-sm" name="buttonSubmit">Save</button><br/><br/>
+              <!--all below is referencing and debugging purposes only, no from activity!-->
+                      <input type ="text" name="foundCustomerQty" class="hidden"value="@matchingCustIdNo" />
+                      <input type ="text" name="requiredCustomerQty"  class="hidden" value="1" />
+                      <input type ="text" name="foundTechnicianQty"  class="hidden" value="@matchingTechIdNo" />
+                      <input type ="text" name="requiredTechnicianQty"  class="hidden" value="1" />
+                      <!--<input class="myInputboxStyle" type="submit" name="buttonSubmit" value="Save" /><br/><br/>-->
+              <!-- all above is referencing and debugging purposes only, no from activity! -->
+       </div>  
+     </div>
+     <div class="row">                 
+       <div class="col-md-2"> </div>
+       <div class="col-md-10">
+           <a href="~/Members/Task/Tasks" class="LnkBtnMyStyle">Tasks List</a> <a href="~/Members/MainPage" class="LnkBtnMyStyle">Main Page</a> 
+       </div>
+     </div>
+  </form>
+</body>
+</html>

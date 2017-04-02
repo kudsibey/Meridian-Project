@@ -1,0 +1,67 @@
+﻿@{
+  var db = Database.Open("MeridianComputers");
+  var CustomerId = (Request.QueryString["ID"]);
+  if (CustomerId.IsEmpty()) {
+    Response.Redirect("~/Customer/Customers");
+  }
+  var cust = db.QuerySingle("SELECT * FROM Customer WHERE id = @0", CustomerId);
+  if( IsPost){
+    var deleteQueryString = "DELETE FROM Customer WHERE Id=@0";
+    db.Execute(deleteQueryString, CustomerId);
+    Response.Redirect("~/Members/Customer/Customers");
+  }
+}
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link href="~/content/bootstrap.css" rel="stylesheet" media="screen" type="text/css">
+  <link href="~/content/myStyles.css" rel="stylesheet" media="screen" type="text/css">
+  <link href="~/content/StyleSheet.css" rel="stylesheet" media="screen" type="text/css">
+  <style>
+         p.itemdesc { color:#f00; display: inline; font-size: 25px; } 
+         pre.itemdesc { color:#f00; display: inline; font-size: 15px;} 
+         p.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #808080;}
+         pre.itemvalue{ color: #000;display: inline;font-size:15px; background-color: #BFF3F5;}       
+         input.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed}
+  </style>
+
+ <title>Delete A Customer</title>
+
+</head>
+
+
+<body>
+  <div class="row">
+      <br/>
+  </div>
+  <div class="row">
+      <div class="col-md-1"> </div>
+      <div class="col-md-2">
+      </div>
+      <div class="col-md-9">
+        <form method="post" action="" name="form">
+           <h2>Customer Delete Confirmation</h2>
+           <p class="itemdesc">Are you sure you want to <u>delete</u> the customer detailed below?</p><br/><br/>
+           <pre class="itemdesc">Customer ID   :</pre> <pre class="itemvalue">@cust.id</pre> <br/><br/> 
+           <pre class="itemdesc">Name          :</pre> <pre class="itemvalue">@cust.CustomerName</pre> <br/><br/>
+           <pre class="itemdesc">Contact Person:</pre> <pre class="itemvalue">@cust.ContactPerson</pre> <br/><br/>
+           <pre class="itemdesc">Address       :</pre> <pre class="itemvalue">@cust.AddressLine1</pre> <br/><br/>
+           <pre class="itemdesc">Town          :</pre> <pre class="itemvalue">@cust.Town</pre> <br/><br/>
+           <pre class="itemdesc">City          :</pre> <pre class="itemvalue">@cust.City</pre><br/> <br/>
+           <pre class="itemdesc">Telephone     :</pre> <pre class="itemvalue">@cust.Telephone</pre> <br/><br/>
+           <pre class="itemdesc">Mobile        :</pre> <pre class="itemvalue">@cust.Mobile</pre> <br/><br/>
+           <pre class="itemdesc">Email         :</pre> <pre class="itemvalue">@cust.email</pre> <br/><br/>
+           <pre class="itemdesc">Web           :</pre> <pre class="itemvalue">@cust.WebSite</pre> <br/><br/>
+           <p><button type="submit" class="btn btn-danger btn-sm" name="buttonSubmit">Delete</button></p><br/>
+        </form>
+      </div>
+  </div>
+ <div class="row">                 
+      <div class="col-md-3"> </div>
+      <div class="col-md-9">
+           <a href="~/Members/Customer/Customers" class="LnkBtnMyStyle">Customers List</a> <a href="~/Members/MainPage" class="LnkBtnMyStyle">Main Page</a> 
+      </div>
+  </div>
+</body>
+</html>

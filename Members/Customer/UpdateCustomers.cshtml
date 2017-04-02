@@ -1,0 +1,131 @@
+﻿
+@{
+    var id = 0;
+    var customerName = "";
+    var contactPerson = "";
+    var addressLine1 = "";
+    var town="";
+    var city="";
+    var postCode = "";
+    var telephone = "";
+    var mobile = "";
+    var Email = "";
+    var webSite ="";
+
+if(!IsPost){
+        if(!Request.QueryString["ID"].IsEmpty()){
+            id = Convert.ToInt16(Request.QueryString["ID"]);
+            var db = Database.Open("MeridianComputers");
+            var dbCommand = "SELECT * FROM Customer WHERE id = @0";
+            var row = db.QuerySingle(dbCommand, id);
+            customerName = row.CustomerName;
+            contactPerson = row.ContactPerson;
+            addressLine1 = row.AddressLine1;
+            town=row.Town;
+            city=row.City;
+            postCode = row.PostCode;
+            telephone = row.Telephone;
+            mobile = row.Mobile;
+            Email = row.email;
+            webSite = row.WebSite;
+        }
+        else{
+            Validation.AddFormError("No customer was selected.");
+        }
+    }
+
+     if(IsPost){
+       /* Validation.RequireField("customerName", "Customer name is required.");
+        Validation.RequireField("contactPerson", "Contact name is required.");
+        Validation.RequireField("addressLine1", "1st line of address  is required.");
+        Validation.RequireField("town", "Town name is required.");
+        Validation.RequireField("city", "City name is required.");
+        Validation.RequireField("postCode", "Post code is required.");
+        Validation.RequireField("telephone", "Telephone number is required.");
+        Validation.RequireField("mobile", "Mobile number is required.");
+        Validation.RequireField("Email", "Customer's email is required.");
+        Validation.RequireField("webSite", "Customer's website is required.");*/
+        
+        id = Convert.ToInt16(Request.Form["custId"]);
+        customerName = Request.Form["CustomerName"];
+        contactPerson = Request.Form["ContactPerson"];
+        addressLine1 = Request.Form["AddressLine1"];
+        town = Request.Form["Town"];
+        city = Request.Form["City"];
+        postCode = Request.Form["PostCode"];
+        telephone = Request.Form["Telephone"];    
+        mobile = Request.Form["Mobile"];    
+        Email = Request.Form["Email"];    
+        webSite = Request.Form["WebSite"];
+
+
+        if(Validation.IsValid()){
+
+           var db = Database.Open("MeridianComputers");
+           var updateCommand = "UPDATE Customer SET CustomerName=@0,ContactPerson=@1,AddressLine1=@2,Town=@3,City=@4,PostCode=@5,Telephone=@6,Mobile=@7,email=@8,WebSite=@9 WHERE id=@10";
+           db.Execute(updateCommand, customerName,contactPerson,addressLine1,town,city,postCode,telephone,mobile,Email,webSite,id);
+                Response.Redirect("~/Members/Customer/Customers");
+       }
+    }
+}
+
+<!DOCTYPE html>
+<html>
+  <head>
+   <meta charset="utf-8" />
+   <title>Edit Customer Data</title>
+  <link href="~/content/bootstrap.css" rel="stylesheet" media="screen" type="text/css">
+  <link href="~/content/myStyles.css" rel="stylesheet" media="screen" type="text/css">
+  <link href="~/content/StyleSheet.css" rel="stylesheet" media="screen" type="text/css">
+
+    <style>
+      .validation-summary-errors{border:2px dashed red;color:red;font-weight:bold; margin:12px; }
+      p.itemdesc { color:#f00; display: inline; font-size: 25px; } 
+      pre.itemdesc { color:#f00; display: inline; font-size: 15px;} 
+      p.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #808080;}
+      pre.itemvalue{ color: #000;display: inline;font-size:15px; background-color: #BFF3F5;}       
+      input.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed}        
+    </style>
+  </head>
+</head>
+<body>
+@Html.ValidationSummary()
+<form method="post" action="">
+     <div class="row>">
+       <div class="col-md-2"></div>
+       <div class="col-md-10">
+           <h1>Update Customer Data</h1> <br/>
+           <pre class="itemdesc">Name:</pre>
+           <input required class="myInputboxStyle" name="CustomerName" type="text" size="45"  value="@customerName" /> <br/><br/>
+           <pre class="itemdesc">Contact Name:</pre>
+           <input class="myInputboxStyle" name="ContactPerson" type="text" size="30" value="@contactPerson" /><br/><br/>
+           <pre class="itemdesc">Address:</pre>
+           <input required class="myInputboxStyle" name="AddressLine1" type="text" size="35" value="@addressLine1" /><br/><br/>
+           <pre class="itemdesc">Town:</pre>
+           <input class="myInputboxStyle" name="Town" type="text" size="25" value="@town" /> <br/><br/>
+           <pre class="itemdesc">City:</pre>
+           <input class="myInputboxStyle" name="City" type="text" size="25" value="@city" /><br/><br/>
+           <pre class="itemdesc">Post Code:</pre>
+           <input required class="myInputboxStyle" name="PostCode" type="text" size="5" value="@postCode" /><br/><br/>
+           <pre class="itemdesc">Telephone:</pre>
+           <input class="myInputboxStyle" name="Telephone" type="text" size="20" value="@telephone" /><br/><br/>
+           <pre class="itemdesc">Mobile:</pre>
+           <input required class="myInputboxStyle" name="Mobile" type="text" size="20" value="@mobile" /><br/><br/>
+           <pre class="itemdesc">EMail:</pre>
+           <input class="myInputboxStyle" name="Email" type="text" size="25" value="@Email" /><br/><br/>
+           <pre class="itemdesc">Website:</pre>
+           <input class="myInputboxStyle" name="WebSite" type="text" size="25" value="@webSite" /><br/><br/>
+
+           <input hidden type="number" name="custId" value="@id">
+           <button type="submit" class="btn btn-success btn-sm" name="buttonSubmit">Update</button><br/><br/>
+       </div>  
+     </div>
+<div class="row">                 
+      <div class="col-md-2"> </div>
+      <div class="col-md-10">
+           <a href="~/Members/Customer/Customers" class="LnkBtnMyStyle">Customers List</a> <a href="~/Members/MainPage" class="LnkBtnMyStyle">Main Page</a> 
+      </div>
+</div>
+</form>
+</body>
+</html>

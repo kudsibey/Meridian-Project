@@ -1,0 +1,83 @@
+﻿@{
+   var InvoiceId = (Request.QueryString["ID"]); 
+   var db = Database.Open("MeridianComputers");
+  
+   var selectCommandAllInv = "SELECT * FROM Invoices WHERE InvId = @0";
+
+   var selectedDataAllInv = db.Query(selectCommandAllInv,InvoiceId);
+
+   var grid = new WebGrid(source: selectedDataAllInv, defaultSort: "invId", rowsPerPage:10);
+
+   var selectCommandInvMain = "SELECT *, Employee.EmployeeName AS TechName, Customer.CustomerName AS CustName  FROM InvMain LEFT JOIN Employee ON Employee.Id=InvMain.techId LEFT JOIN Customer ON Customer.Id = InvMain.custId WHERE InvMain.id = @0";
+   var selectedDataInvMain = db.QuerySingle(selectCommandInvMain,InvoiceId);
+   int TechID,CustID;
+   string TechName,CustName;
+   decimal InvTotal;
+   TechID = selectedDataInvMain.techId;TechName = selectedDataInvMain.TechName;
+   if(TechName == null){TechName = "not traced";}
+   CustID = selectedDataInvMain.custId;CustName = selectedDataInvMain.custName;
+   if(CustName == null){ CustName="not traced";};
+   InvTotal = selectedDataInvMain.invTotal;
+
+}
+    
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <link href="~/content/bootstrap.css" rel="Stylesheet" media="screen" type="text/css" />
+        <link href="~/content/StyleSheet.css" rel="Stylesheet" media="screen" type="text/css" />  
+        <script src="~/content/myScript.js"></script>
+        <title>Invoice</title>
+<style>
+     .validation-summary-errors{border:2px dashed red;color:red;font-weight:bold; margin:12px; }
+      p.itemdesc { color:#f00; display: inline; font-size: 25px; } 
+      pre.itemdesc { color:#000; display: inline; font-size: 15px;} 
+      pre.itemdesc1 { color:#0026ff; display: inline; font-size: 12px; padding: 5px; height: fit-content;background-color: #e2cbcb} 
+      p.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #808080;}
+      select.itemvalue{ color: #ffd800; display: inline; font-size:20px; background-color: #808080; font-size: 15px}
+      pre.itemvalue{ color: #000;display: inline;font-size:15px; background-color:#BFF3F5;}       
+      input.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed} 
+      textarea.myInputboxStyle {color: #000;display: inline;font-size:15px; background-color: #f7f1ed;width: 300px;height: 100px}        
+</style>
+        <style type="text/css">
+            .grid { margin: 4px; border-collapse: collapse; table-layout: inherit;white-space: nowrap }
+            .grid th, .grid td {border: 1px solid #C0C0C0; padding: 5px; }
+            .head { background-color: #E8E8E8; font-weight: bold; color: #0026ff;}
+            .alt { background-color: #E8E8E8; color: #000; }
+            .grid tr:hover {background-color: #fffddc;}
+            .grid selectedRow { background-color: #ff6a00 !important;}
+            
+        </style>      
+</head>
+<body>
+
+
+<div class="row" style="padding: 100px 100px 100px 100px">
+   <div class="col-md-2">
+   </div>
+   <div class="col-md-10">
+            <h1> Invoice</h1><label>ID:@InvoiceId</label><br/>
+            <label>Tech ID:@TechID</label><label>  Name:@TechName</label><br/>
+            <label>Cust ID:@CustID</label><label>  Name:@CustName</label><br/>
+                @grid.GetHtml(
+                    tableStyle: "grid",
+                    headerStyle: "head",
+                    alternatingRowStyle: "alt",
+                    columns: grid.Columns(
+                    grid.Column(header:"Prd.ID",format: (item) =>string.Format("{0}",item.prodId)),
+                    grid.Column(header:"Name",format: (item) =>string.Format("{0}",item.prodName)),
+                    grid.Column(header:"Price",format: (item) => string.Format(System.Globalization.CultureInfo.GetCultureInfo("en-GB"),"{0:c}", item.prodPrice)),
+                    grid.Column(header:"Qty",format:(item)=>string.Format("{0}",item.prodQty)),
+                    grid.Column(header:"Total",format: (item) => string.Format(System.Globalization.CultureInfo.GetCultureInfo("en-GB"),"{0:c}", item.prodTotal))))
+                    <p style="padding-left: 200px">Inv.Total:£@InvTotal</p>
+                    <a href="~/Members/Invoices/Invoices" class="LnkBtnMyStyle">Invoices</a>
+                    <a href="~/Members/MainPage" class="LnkBtnMyStyle">Main Page</a>
+   </div>
+</div>
+
+</body>
+</html>
